@@ -464,7 +464,7 @@ oracle.install.asm.diskGroup.disksWithFailureGroupNames={%- for disk in item.dis
 #
 #-------------------------------------------------------------------------------
 oracle.install.asm.diskGroup.disks={%- for disk in  item.disk %}
-  {%- if device_persistence=='udev' -%}{{ disk.device }}
+  {%- if device_persistence in ['udev',''] -%}{{ disk.device }}
   {%- elif device_persistence=='asmfd' -%}AFD:{{ disk.asmlabel | upper }}
   {%- else -%}
     {%- if oracle_asm_disk_string.endswith('*') %}{{ oracle_asm_disk_string[:-1] }}
