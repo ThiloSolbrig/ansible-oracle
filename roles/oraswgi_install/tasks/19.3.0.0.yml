@@ -38,6 +38,7 @@
         - patch_before_rootsh
         - oracle_home_gi not in checkgiinstall.stdout
         - oracle_install_version_gi is version(19, '>=')
+        - _orasw_meta_primary_node | bool
 
 - name: install_home_gi | Check for file GridSetup.sh
   ansible.builtin.stat:
@@ -81,7 +82,6 @@
       ansible.builtin.fetch:
         src: "{{ oracle_home_gi }}/cv/rpm/{{ cvuqdisk_rpm }}"
         dest: /tmp
-        mode: 0644
       when:
         - _orasw_meta_primary_node | bool
         - statcvuqdisk.stat is defined
@@ -92,15 +92,23 @@
       ansible.builtin.copy:
         src: "/tmp/{{ cluster_master }}/{{ oracle_home_gi }}/cv/rpm/{{ cvuqdisk_rpm }}"
         dest: "{{ oracle_rsp_stage }}/{{ cvuqdisk_rpm }}"
-        mode: 0644
+        mode: "0644"
       tags: cvuqdisk
 
-    - name: install_home_gi | Install cvuqdisk rpm
+    - name: install_home_gi | Install cvuqdisk rpm (non-FIPS)
       ansible.builtin.yum:
         name: "{{ oracle_rsp_stage }}/{{ cvuqdisk_rpm }}"
         state: present
         disable_gpg_check: true
-      tags: cvuqdisk
+      when: not _orahost_fips_mode_enabled
+
+    - name: install_home_gi | Install cvuqdisk rpm (FIPS)
+      ansible.builtin.shell: 
+        cmd: "rpm --upgrade --nodigest --nofiledigest {{ oracle_rsp_stage }}/{{ cvuqdisk_rpm }}"
+      register: _oraswgi_install_cvuqdisk_result
+      changed_when: _oraswgi_install_cvuqdisk_result.rc == 0
+      failed_when: false
+      when: _orahost_fips_mode_enabled
 
 - name: install_home_gi | Setup response file for install (GI)
   ansible.builtin.template:
@@ -200,6 +208,7 @@
         __argvru:
           - -applyRU
           - "{{ __patchru_dir }}"
+      environment: "{{ oracle_script_env }}"
       become: true
       become_user: "{{ _grid_install_user }}"
       when:
@@ -227,6 +236,7 @@
   block:  # when: oracle_home_gi not in checkgiinstall.stdout
     - name: install_home_gi | Run oraInstroot script after installation
       ansible.builtin.command: "{{ oracle_inventory_loc }}/orainstRoot.sh"
+      environment: "{{ oracle_script_env }}"
       # noqa no-changed-when
       become: true
       tags:
@@ -239,6 +249,7 @@
 
     - name: install_home_gi | Run root script after installation (Master Node)
       ansible.builtin.command: "{{ oracle_home_gi }}/root.sh"
+      environment: "{{ oracle_script_env }}"
       # noqa no-changed-when
       become: true
       register: rootmaster
@@ -268,6 +279,7 @@
       # noqa no-changed-when
       args:
         executable: /usr/bin/bash
+      environment: "{{ oracle_script_env }}"
       become: true
       with_indexed_items: "{{ groups[orasw_meta_cluster_hostgroup] }}"
       tags:
@@ -285,6 +297,7 @@
 
     - name: install_home_gi | Execute ConfigTools
       ansible.builtin.command: "{{ oracle_home_gi }}/gridSetup.sh -executeConfigTools -responseFile {{ oracle_rsp_stage }}/{{ _oraswgi_install_oracle_grid_responsefile }} -silent"
+      environment: "{{ oracle_script_env }}"
       # noqa no-changed-when
       become: true
       become_user: "{{ _grid_install_user }}"
