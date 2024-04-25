@@ -21,3 +21,13 @@
     _orasw_meta_primary_node: "{{ groups[orasw_meta_cluster_hostgroup][0] == inventory_hostname }}"
   when:
     - oracle_install_option_gi == 'CRS_CONFIG'
+
+- name: Determine system's FIPS state
+  block:
+    - name: Get system's FIPS state
+      ansible.builtin.command: "cat /proc/sys/crypto/fips_enabled"
+      register: _orahost_fips_mode
+      changed_when: false
+    - name: Convert FIPS state to bool
+      ansible.builtin.set_fact:
+        _orahost_fips_mode_enabled: "{{ _orahost_fips_mode != '0' }}"
