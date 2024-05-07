@@ -99,15 +99,16 @@
         name: "{{ oracle_rsp_stage }}/{{ cvuqdisk_rpm }}"
         state: present
         disable_gpg_check: true
-      when: not _orahost_fips_mode_enabled
+      when: not ansible_fips
 
     - name: install_home_gi | Install cvuqdisk rpm (FIPS)
-      ansible.builtin.shell: 
-        cmd: "rpm --upgrade --nodigest --nofiledigest {{ oracle_rsp_stage }}/{{ cvuqdisk_rpm }}"
+      # noqa command-instead-of-module
+      ansible.builtin.command:
+        "rpm --upgrade --nodigest --nofiledigest {{ oracle_rsp_stage }}/{{ cvuqdisk_rpm }}"
       register: _oraswgi_install_cvuqdisk_result
       changed_when: _oraswgi_install_cvuqdisk_result.rc == 0
       failed_when: false
-      when: _orahost_fips_mode_enabled
+      when: ansible_fips
 
 - name: install_home_gi | Setup response file for install (GI)
   ansible.builtin.template:
