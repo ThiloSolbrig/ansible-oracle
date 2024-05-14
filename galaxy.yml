@@ -19,5 +19,5 @@ tags:
 dependencies:
   community.general: '>=7.0.0'
   devsec.hardening: 8.6.0
-  community.crypto:
-  ansible.posix:
+  community.crypto: '>=2.8.0'
+  ansible.posix: '>=1.0.0'

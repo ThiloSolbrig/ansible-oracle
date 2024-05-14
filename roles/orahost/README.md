@@ -26,6 +26,7 @@ Role to configure the hostsystem for ansible-oracle
   - [disable_firewall](#disable_firewall)
   - [disable_numa_boot](#disable_numa_boot)
   - [disable_selinux](#disable_selinux)
+  - [etc_hosts_entries](#etc_hosts_entries)
   - [etc_hosts_ip](#etc_hosts_ip)
   - [extrarepos_disabled](#extrarepos_disabled)
   - [extrarepos_enabled](#extrarepos_enabled)
@@ -34,6 +35,7 @@ Role to configure the hostsystem for ansible-oracle
   - [host_fs_layout](#host_fs_layout)
   - [install_os_packages](#install_os_packages)
   - [keyfile](#keyfile)
+  - [max_size_in_gb_hugepages](#max_size_in_gb_hugepages)
   - [nr_hugepages](#nr_hugepages)
   - [nr_hugepages_memory](#nr_hugepages_memory)
   - [nr_hugepages_percent](#nr_hugepages_percent)
@@ -42,11 +44,16 @@ Role to configure the hostsystem for ansible-oracle
   - [oracle_asm_packages_sles](#oracle_asm_packages_sles)
   - [oracle_groups](#oracle_groups)
   - [oracle_hugepages](#oracle_hugepages)
+  - [oracle_hugepages_sysctl_file](#oracle_hugepages_sysctl_file)
   - [oracle_ic_net](#oracle_ic_net)
   - [oracle_packages](#oracle_packages)
   - [oracle_packages_sles_multi](#oracle_packages_sles_multi)
   - [oracle_sysctl](#oracle_sysctl)
+  - [oracle_sysctl_file](#oracle_sysctl_file)
   - [oracle_users](#oracle_users)
+  - [orahost_ssh_hostkeytypes](#orahost_ssh_hostkeytypes)
+  - [orahost_ssh_key_size](#orahost_ssh_key_size)
+  - [orahost_ssh_key_type](#orahost_ssh_key_type)
   - [os_family_supported](#os_family_supported)
   - [os_min_supported_version](#os_min_supported_version)
   - [percent_hugepages](#percent_hugepages)
@@ -54,6 +61,7 @@ Role to configure the hostsystem for ansible-oracle
   - [ssh_keys](#ssh_keys)
   - [sudoers_template](#sudoers_template)
   - [transparent_hugepage_disable](#transparent_hugepage_disable)
+  - [transparent_hugepage_disable_by_grub](#transparent_hugepage_disable_by_grub)
 - [Discovered Tags](#discovered-tags)
 - [Open Tasks](#open-tasks)
 - [Dependencies](#dependencies)
@@ -284,6 +292,31 @@ disable_numa_boot: true
 disable_selinux: true
 ```
 
+### etc_hosts_entries
+
+List of additional entries, optionally along with aliases, to be put into /etc/hosts. E.g. on non-DNS environments or if we don't rely on DNS
+
+#### Default value
+
+```YAML
+etc_hosts_entries: []
+```
+
+#### Example usage
+
+```YAML
+etc_hosts_entries:
+  - fqdn: clusternode1.example.com
+    ip: 192.168.1.1
+  - fqdn: clusternode2.example.com
+    ip: 192.168.1.2
+    aliases:
+      - myalias.example.com
+would create following entries in /etc/hosts:
+192.168.1.1 clusternode1  clusternode1.example.com
+192.168.1.2 clusternode2  clusternode2.example.com  myalias.example.com
+```
+
 ### etc_hosts_ip
 
 Set IP to 2nd Interface on virtualbox and 1st for all otehr installations
@@ -379,6 +412,16 @@ install_os_packages: true
 
 ```YAML
 keyfile: /tmp/known_hosts
+```
+
+### max_size_in_gb_hugepages
+
+Cap HugePages to 70% of physical memory to prevent overcomitting. Only valid when configure_hugepages_by: memory
+
+#### Default value
+
+```YAML
+max_size_in_gb_hugepages: '{{ ansible_memtotal_mb / 1024 * 0.7 }}'
 ```
 
 ### nr_hugepages
@@ -478,6 +521,26 @@ This is an internal variable. Do not change it!
 ```YAML
 oracle_hugepages:
   - {name: vm.nr_hugepages, value: '{{ nr_hugepages }}'}
+  - {name: vm.hugetlb_shm_group, value: "{{ oracle_user_getent['ansible_facts']['getent_passwd'][oracle_user][2]
+      }}"}
+```
+
+### oracle_hugepages_sysctl_file
+
+Allows to specify the file in which sysctl settings for huge pages will be stored.
+When unspecified it will first fallback to be `oracle_sysctl_file`
+and then to module defaults (`/etc/sysctl.conf`) should that one also be not defined.
+
+#### Default value
+
+```YAML
+oracle_hugepages_sysctl_file: _unset_
+```
+
+#### Example usage
+
+```YAML
+oracle_hugepages_sysctl_file: '/etc/sysctl.d/oracle-hugepages.conf'
 ```
 
 ### oracle_ic_net
@@ -655,6 +718,23 @@ oracle_sysctl:
   - {name: vm.min_free_kbytes, value: 524288}
 ```
 
+### oracle_sysctl_file
+
+Allows to specify the file in which sysctl settings will be stored. When unspecified it will
+be put to `/etc/sysctl.conf` by the module defaults (omit)
+
+#### Default value
+
+```YAML
+oracle_sysctl_file: _unset_
+```
+
+#### Example usage
+
+```YAML
+oracle_sysctl_file: '/etc/sysctl.d/oracle.conf'
+```
+
 ### oracle_users
 
 oracle OS-User
@@ -668,6 +748,40 @@ oracle_users:
     primgroup: '{{ oracle_group }}'
     othergroups: '{{ dba_group }},{{ asmadmin_group }},{{ asmdba_group }},{{ asmoper_group
       }},backupdba,dgdba,kmdba,{{ oper_group }}'
+```
+
+### orahost_ssh_hostkeytypes
+
+SSH host key types to collect/deploy among hosts
+Please note, ed25519 are not supported on FIPS enabled systems and though better not collected
+
+#### Default value
+
+```YAML
+orahost_ssh_hostkeytypes:
+  - dsa
+  - rsa
+  - ecdsa
+```
+
+### orahost_ssh_key_size
+
+SSH key size of {{ orahost_ssh_key_type }}
+
+#### Default value
+
+```YAML
+orahost_ssh_key_size: 4096
+```
+
+### orahost_ssh_key_type
+
+SSH key type for oracle and grid users' SSH Keys
+
+#### Default value
+
+```YAML
+orahost_ssh_key_type: rsa
 ```
 
 ### os_family_supported
@@ -749,6 +863,19 @@ transparent_hugepage_disable:
   - {disable: echo never >, path: /sys/kernel/mm/transparent_hugepage/defrag, rclocal: /etc/rc.d/rc.local}
 ```
 
+### transparent_hugepage_disable_by_grub
+
+Alternatively to dynamically disabling transparent hugepages using rc.local,
+disable transparent hugepages using kernel command line.
+
+_Note_: Setting transparent_hugepage_disable_by_grub true obsoletes transparent_hugepage_disable
+
+#### Default value
+
+```YAML
+transparent_hugepage_disable_by_grub: false
+```
+
 ## Discovered Tags
 
 **_always_**
@@ -803,6 +930,7 @@ transparent_hugepage_disable:
 
 ## Dependencies
 
+- global_handlers
 - orahost_meta
 
 ## License

@@ -38,7 +38,6 @@
         - patch_before_rootsh
         - oracle_home_gi not in checkgiinstall.stdout
         - oracle_install_version_gi is version(19, '>=')
-        - _orasw_meta_primary_node | bool
 
 - name: install_home_gi | Check for file GridSetup.sh
   ansible.builtin.stat:
@@ -100,15 +99,16 @@
         name: "{{ oracle_rsp_stage }}/{{ cvuqdisk_rpm }}"
         state: present
         disable_gpg_check: true
-      when: not _orahost_fips_mode_enabled
+      when: not ansible_fips
 
     - name: install_home_gi | Install cvuqdisk rpm (FIPS)
-      ansible.builtin.shell: 
-        cmd: "rpm --upgrade --nodigest --nofiledigest {{ oracle_rsp_stage }}/{{ cvuqdisk_rpm }}"
+      # noqa command-instead-of-module
+      ansible.builtin.command:
+        "rpm --upgrade --nodigest --nofiledigest {{ oracle_rsp_stage }}/{{ cvuqdisk_rpm }}"
       register: _oraswgi_install_cvuqdisk_result
       changed_when: _oraswgi_install_cvuqdisk_result.rc == 0
       failed_when: false
-      when: _orahost_fips_mode_enabled
+      when: ansible_fips
 
 - name: install_home_gi | Setup response file for install (GI)
   ansible.builtin.template:
@@ -177,6 +177,7 @@
           - "oracle_home_gi: {{ oracle_home_gi }}"
           - "apply RU before configuration: {{ patch_before_rootsh }}"
           - "{{ patch_before_rootsh | bool | ternary('patchru_dir: ' + __patchru_dir, '') }}"
+          - "oracle_script_env:   {{ oracle_script_env | default({}) }}"
       when:
         - _orasw_meta_primary_node | bool
 

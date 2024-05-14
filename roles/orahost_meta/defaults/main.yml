@@ -76,17 +76,62 @@ oracle_rsp_stage: "{{ oracle_stage }}/rsp"
 #
 # There is usually no need to change this variable.
 # @end
-oracle_tmp_stage: "{{ oracle_stage }}/tmp"
+oracle_tmp_stage: >-
+  {% if ansible_fips | default(false) %}{{ oracle_stage }}{%- endif %}/tmp
+
+# @var orahost_meta_cv_assume_distid:description: >
+# The variable is used by `oracle_script_env` and passed
+# to shell: or command: through "environment:" keyword
+#
+# Riles:
+#   - Redhat/OL and ansible_distribution_major_version <= 8
+#
+#     `OL{{ ansible_distribution_major_version }}`
+#
+#   - Redhat/OL and ansible_distribution_major_version = 9
+#
+#     `OL8`
+#
+#  - SuSE
+#
+#    `SLES15`
+#
+# @end
+orahost_meta_cv_assume_distid: |-
+  {% if ansible_os_family == 'RedHat' %}OL
+  {%- if ansible_distribution_major_version is version('8', '<=') %}{{ ansible_distribution_major_version }}
+  {%- elif ansible_distribution_major_version is version('9', '=') %}8
+  {%- endif %}
+  {%- elif ansible_os_family in ('SuSe', 'Suse') %}SUSE{{ ansible_distribution_major_version }}
+  {%- endif %}
+
+# @var orahost_meta_java_options:description: >
+# The variable is used by `oracle_script_env` and passed
+# to shell: or command: through "environment:" keyword
+#
+# `java.io.tmpdir` is needed for FIPS configured systems,
+# because starting tools from `/tmp` is forbidden.
+# @end
+orahost_meta_java_options: >-
+  {% if oracle_tmp_stage != '/tmp' -%}
+  -Djava.io.tmpdir={{ oracle_tmp_stage -}}
+  {% endif %}
+
+# @var orahost_meta_java_options:description: >
+# The variable is used by `oracle_script_env` and passed
+# to shell: or command: through "environment:" keyword
+# @end
+orahost_meta_tmpdir: "{{ oracle_tmp_stage }}"
 
 # @var oracle_script_env:description: >
 # (Minimum) environment settings to pass to Oracle scripts.
 # Usually passed to shell: or command: through "environment:" keyword
-# 
+#
 # @end
 oracle_script_env:
-  TMPDIR: "{{ oracle_tmp_stage }}"
-  _JAVA_OPTIONS: "-Djava.io.tmpdir={{ oracle_tmp_stage }}"
-  CV_ASSUME_DISTID: "OL7" # backward compatibility for GI < 19.7 on Linux 8/9
+  CV_ASSUME_DISTID: "{{ orahost_meta_cv_assume_distid }}"
+  TMPDIR: "{{ orahost_meta_tmpdir }}"
+  "_JAVA_OPTIONS": "{{ orahost_meta_java_options }}"
 
 # @var oracle_seclimits:description: ulimit definition for orahost role.
 oracle_seclimits:
@@ -128,9 +173,9 @@ asm_diskgroups: []
 #      - {name: 'compatible.rdbms', value: 11.2.0.4.0}
 #      - {name: 'compatible.asm', value: 12.1.0.2.0}
 #    disk:
-#      - {device: /dev/sdc, asmlabel: crs01}
-#      - {device: /dev/sdd, asmlabel: crs02}
-#      - {device: /dev/sde, asmlabel: crs03}
+#      - {device: /dev/sdc, asmlabel: crs01, failure_group: storage01}
+#      - {device: /dev/sdd, asmlabel: crs02, failure_group: storage02}
+#      - {device: /dev/sde, asmlabel: crs03, failure_group: nfs, quorum: true}
 #  - diskgroup: data
 #    properties:
 #      - {redundancy: external, ausize: 4}
@@ -147,4 +192,12 @@ asm_diskgroups: []
 #      - {name: compatible.asm, value: 12.1.0.2.0}
 #    disk:
 #      - {device: /dev/sdg, asmlabel: fra01}
+# @end
+
+# @var oracle_nr_bg_processes:description: Estimated number of background processes of an Oracle instance. Used to calculate kernel SEMMNS
+oracle_nr_bg_processes: 130
+# @var sysctl_kernel_sem_force:description: >
+# Force setting kernel.sem depending on configured instances
+# (collections: oracle_databases, oracle_asm_instance), even if calculated values are lower than current ones
+sysctl_kernel_sem_force: false
 # @end

@@ -32,6 +32,7 @@
 
     - name: Upgrade OPatch
       ansible.builtin.include_tasks: opatch-upgrade.yml
+      when: _orasw_meta_primary_node | bool
 
     - name: Check current opatch version
       opitzconsulting.ansible_oracle.oracle_opatch:
@@ -39,10 +40,11 @@
         state: opatchversion
       register: current_opatch_version
       tags: current_opatch_version
+      when: _orasw_meta_primary_node | bool
 
     - name: Configure ocm.rsp for opatch < 12.2.0.1.5
       when:
-        - current_opatch_version is defined
+        - current_opatch_version.msg is defined
         - current_opatch_version.msg is version_compare('12.2.0.1.5', '<')
       block:
         - name: Configure ocm.rsp (1)

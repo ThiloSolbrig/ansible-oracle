@@ -52,9 +52,9 @@
     regexp: '.*{{ __orahost_etc_hosts_entry.fqdn }}$'
     line:
       "{{ __orahost_etc_hosts_entry.ip }}
-      {{ (__orahost_etc_hosts_entry.fqdn|split('.'))[0] }}
+      {{ (__orahost_etc_hosts_entry.fqdn | split('.'))[0] }}
       {{ __orahost_etc_hosts_entry.fqdn is search('\\.') | ternary(__orahost_etc_hosts_entry.fqdn, '') }}\
-      {% for alias in __orahost_etc_hosts_entry.aliases|default([]) %} {{ alias }}{% endfor %} # ANSIBLE managed"
+      {% for alias in __orahost_etc_hosts_entry.aliases | default([]) %} {{ alias }}{% endfor %} # ANSIBLE managed"
     state: present
   loop: "{{ etc_hosts_entries }}"
   loop_control:
@@ -85,7 +85,7 @@
     uid: "{{ item.uid | default(omit) }}"
     home: "{{ item.home | default(omit) }}"
     generate_ssh_key: true
-    ssh_key_type:  "{{ orahost_ssh_key_type }}"
+    ssh_key_type: "{{ orahost_ssh_key_type }}"
     ssh_key_bits: "{{ orahost_ssh_key_size }}"
     ssh_key_file: ".ssh/id_{{ orahost_ssh_key_type }}"
     append: true
@@ -103,7 +103,7 @@
     uid: "{{ item.uid | default(omit) }}"
     home: "{{ item.home | default(omit) }}"
     generate_ssh_key: true
-    ssh_key_type:  "{{ orahost_ssh_key_type }}"
+    ssh_key_type: "{{ orahost_ssh_key_type }}"
     ssh_key_bits: "{{ orahost_ssh_key_size }}"
     ssh_key_file: ".ssh/id_{{ orahost_ssh_key_type }}"
     append: true
@@ -140,25 +140,25 @@
     - sudoadd
 
 - name: SSH key setup
-  block:
-    - name: ssh-keys | Setup ssh user equivalence for oracle users
-      include_tasks: ssh_user_equivalence.yml
-      vars:
-        _orahost_equivalence_users: "{{ oracle_users }}"
-      when:
-        - not role_separation # TODO: or RAC option in use
-
-    - name: ssh-keys | Setup ssh user equivalence for grid users
-      include_tasks: ssh_user_equivalence.yml
-      vars:
-        _orahost_equivalence_users: "{{ grid_users }}"
-      when:
-        - role_separation
   when:
     - configure_ssh
     - _oraswgi_meta_configure_cluster
   tags:
     - sshkeys
+  block:
+    - name: ssh-keys | Setup ssh user equivalence for oracle users
+      ansible.builtin.include_tasks: ssh_user_equivalence.yml
+      vars:
+        _orahost_equivalence_users: "{{ oracle_users }}"
+      when:
+        - not role_separation   # TODO: or RAC option in use
+
+    - name: ssh-keys | Setup ssh user equivalence for grid users
+      ansible.builtin.include_tasks: ssh_user_equivalence.yml
+      vars:
+        _orahost_equivalence_users: "{{ grid_users }}"
+      when:
+        - role_separation
 
 - name: filesystem | configure hostfs
   when:
@@ -275,7 +275,8 @@
   ansible.posix.sysctl:
     name: "{{ item.name }}"
     value: "{{ item.value }}"
-    state: present
+    sysctl_file: "{{ item.sysctl_file | default(oracle_sysctl_file) | default(omit) }}"
+    state: "{{ item.state | default('present') }}"
     reload: true
     ignoreerrors: true
   with_items: "{{ oracle_sysctl }}"
@@ -291,11 +292,19 @@
     - hugepages
     - molecule-idempotence-notest
   block:
+    - name: Lookup oracle user GID for hugepages
+      ansible.builtin.getent:
+        database: passwd
+        key: "{{ oracle_user }}"
+        split: ":"
+      register: oracle_user_getent
+
     - name: Oracle hugepages
       ansible.posix.sysctl:
         name: "{{ item.name }}"
         value: "{{ item.value }}"
-        state: present
+        sysctl_file: "{{ item.sysctl_file | default(oracle_hugepages_sysctl_file) | default(oracle_sysctl_file) | default(omit) }}"
+        state: "{{ item.state | default('present') }}"
         reload: true
         ignoreerrors: true
       with_items: "{{ oracle_hugepages }}"
@@ -320,7 +329,8 @@
           ansible.posix.sysctl:
             name: "{{ item.name }}"
             value: "{{ item.value }}"
-            state: present
+            sysctl_file: "{{ item.sysctl_file | default(oracle_hugepages_sysctl_file) | default(oracle_sysctl_file) | default(omit) }}"
+            state: "{{ item.state | default('present') }}"
             reload: true
           with_items: "{{ oracle_hugepages }}"
 
