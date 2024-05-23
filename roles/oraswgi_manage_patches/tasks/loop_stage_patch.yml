@@ -32,7 +32,7 @@
             path: "{{ __patch_unarchive_dir }}/{{ __sw_patches_filename_creates }}"
           register: checkpatcharchiveres
           vars:
-            __sw_patches_filename_creates: "{{ osp_loop.creates | default((osp_loop.patchid | string) + '/README.txt') }}"
+            __sw_patches_filename_creates: "{{ osp_loop.creates | default((osp_loop.patchid | string) + '/README.html') }}"
 
         - name: Loop_stage_patch | Copy oracle GI patch (opatch) to server (local)
           ansible.builtin.copy:
