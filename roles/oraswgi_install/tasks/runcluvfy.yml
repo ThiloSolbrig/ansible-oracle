@@ -59,6 +59,7 @@
       become_user: "{{ _grid_install_user }}"
       when:
         - not _oraswgi_meta_configure_cluster
+        - not gi_ignoreprereq | bool
 
     - ansible.builtin.debug:  # noqa name[missing]
         var: cmdruncluvfy.stdout_lines
