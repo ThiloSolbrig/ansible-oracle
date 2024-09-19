@@ -262,6 +262,7 @@
       with_subelements:
         - "{{ host_fs_layout }}"
         - filesystem
+      when: item.1.mntp is defined
 
     # create partition only when device != pvname
     - name: filesystem | Create partition and pv
@@ -306,6 +307,7 @@
       with_subelements:
         - "{{ host_fs_layout }}"
         - filesystem
+      when: item.1.fstype is defined
 
     - name: filesytem | mount dir
       ansible.posix.mount:
@@ -347,6 +349,7 @@
       with_subelements:
         - "{{ host_fs_layout }}"
         - filesystem
+      when: item.1.mntp is defined
 
 - name: filesystem | Create directory for oraInventory
   ansible.builtin.file:
