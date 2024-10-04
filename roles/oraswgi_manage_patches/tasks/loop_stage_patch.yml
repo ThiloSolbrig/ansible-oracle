@@ -23,7 +23,7 @@
       {{ _oraswgi_manage_patches_sw_patch_dict.unique_patchid | default(_oraswgi_manage_patches_sw_patch_dict.patchid) }}
     _oraswgi_manage_patches_unarchive_dir: "{{ oracle_patch_stage }}/{{ _oraswgi_manage_patches_sw_patch_dict.version }}/{{ _oraswgi_manage_patches_unique_patchid }}"
     _oraswgi_manage_patches_creates: >-
-      {{ _oraswgi_manage_patches_unarchive_dir }}/{{ _oraswgi_manage_patches_sw_patch_dict.creates | default((_oraswgi_manage_patches_sw_patch_dict.patchid | string) + '/README.txt') }}
+      {{ _oraswgi_manage_patches_unarchive_dir }}/{{ _oraswgi_manage_patches_sw_patch_dict.creates | default(_oraswgi_manage_patches_sw_patch_dict.patchid | string) }}
 
   block:
     - name: Loop_stage_patch | State data for loop_stage_patch.yml
@@ -56,7 +56,7 @@
 
         - name: Loop_stage_patch | Copy oracle GI patch (opatch) to server (local)
           ansible.builtin.copy:
-            src: "{{ oracle_sw_source_local }}/{{ osp_loop.filename }}"
+            src: "{{ osp_loop.filesource | default(oracle_sw_source_local + '/' + osp_loop.filename, true) }}"
             dest: "{{ oracle_stage }}/{{ osp_loop.filename }}"
             mode: "0644"
             force: false
@@ -66,7 +66,7 @@
 
         - name: Loop_stage_patch | Copy oracle GI patch (opatch) to server (www)
           ansible.builtin.get_url:
-            url: "{{ oracle_sw_source_www }}/{{ osp_loop.filename }}"
+            url: "{{ osp_loop.filesource | default(oracle_sw_source_www + '/' + osp_loop.filename, true) }}"
             dest: "{{ oracle_stage }}/{{ osp_loop.filename }}"
             mode: "0644"
             force: false
