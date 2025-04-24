@@ -256,6 +256,7 @@ dbenvdir: "{{ oracle_user_home }}/dbenv"
 # | Attribute | Description |
 # | --- | --- |
 # | imagename | Set an optional name for a golden Image to install from. The archiv is read from same directory as the normal installation medias from Oracle. |
+# | filesource | `imagename` can be replaced/overridden by `filesource` to provide an absolute path/url to the golden image (when not available in the normal installation place) |
 # | edition | allowed values: `SE`, `SE2`, `EE`. default value: <todo> |
 # | opatch_minversion | Is needed for patching. Automatically installs a new version of OPatch, when existing version is older then `opatch_minversion` |
 # | oracle_home | |
@@ -414,6 +415,18 @@ oracle_ee_options_213:
   - {option: olap, state: false}
   - {option: partitioning, state: false}
   - {option: rat, state: false}
+
+# @var oracle_all_editions_options_state:description: >
+# Intended state of edition independent database options, as defined in {{ oracle_all_editions_options }}
+# @end
+oracle_all_editions_options_state:
+  - {option: dnfs, enabled: false}
+  - {option: uniaud, enabled: false}
+
+# @var set_oracle_all_editions_options_state:description: >
+# Switch to globally enable/disable linking of edition independent database options
+# @end
+set_oracle_all_editions_options_state: true
 
 # @todo information: variable description is missing
 # @var oracle_databases:description: >
