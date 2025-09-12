@@ -1,3 +1,0 @@
----
-bugfixes:
-  - "oraswgi_manage_patches/oraswdb_manage_patches: with role_separation, opatch file craeted by grid couldn't be overwritten by oracle due to wrong permissions"
