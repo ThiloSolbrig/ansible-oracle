@@ -31,7 +31,7 @@
       ansible.builtin.get_url:
         url: "{{ oracle_sw_source_www }}/{{ oop_loop.filename }}"
         dest: "{{ oracle_stage }}"
-        mode: "0644"
+        mode: "0664"
         force: true
       with_items: "{{ oracle_opatch_patch | selectattr('version', 'equalto', db_version) }}"
       loop_control:
@@ -51,7 +51,7 @@
       ansible.builtin.copy:
         src: "{{ oracle_sw_source_local }}/{{ item.filename }}"
         dest: "{{ oracle_stage }}"
-        mode: "0644"
+        mode: "0664"
         force: true
       with_items: "{{ oracle_opatch_patch | selectattr('version', 'equalto', db_version) }}"
       when:
