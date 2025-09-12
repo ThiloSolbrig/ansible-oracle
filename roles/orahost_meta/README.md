@@ -29,6 +29,9 @@ Meta role used by other roles to share variable defaults.
   - [orahost_meta_cv_assume_distid](#orahost_meta_cv_assume_distid)
   - [orahost_meta_java_options](#orahost_meta_java_options)
   - [orahost_meta_tmpdir](#orahost_meta_tmpdir)
+  - [orahost_ssh_hostkeytypes](#orahost_ssh_hostkeytypes)
+  - [orahost_ssh_key_size](#orahost_ssh_key_size)
+  - [orahost_ssh_key_type](#orahost_ssh_key_type)
   - [role_separation](#role_separation)
   - [scripts_folder](#scripts_folder)
   - [sysctl_kernel_sem_force](#sysctl_kernel_sem_force)
@@ -66,9 +69,9 @@ asm_diskgroups:
      - {name: 'compatible.rdbms', value: 11.2.0.4.0}
      - {name: 'compatible.asm', value: 12.1.0.2.0}
    disk:
-     - {device: /dev/sdc, asmlabel: crs01}
-     - {device: /dev/sdd, asmlabel: crs02}
-     - {device: /dev/sde, asmlabel: crs03}
+     - {device: /dev/sdc, asmlabel: crs01, failure_group: storage01}
+     - {device: /dev/sdd, asmlabel: crs02, failure_group: storage02}
+     - {device: /dev/sde, asmlabel: crs03, failure_group: nfs, quorum: true}
  - diskgroup: data
    properties:
      - {redundancy: external, ausize: 4}
@@ -369,6 +372,40 @@ orahost_meta_java_options: >-
 
 ```YAML
 orahost_meta_tmpdir: '{{ oracle_tmp_stage }}'
+```
+
+### orahost_ssh_hostkeytypes
+
+SSH host key types to collect/deploy among hosts
+Please note, ed25519 is not supported on FIPS enabled systems and though better not collected
+
+#### Default value
+
+```YAML
+orahost_ssh_hostkeytypes:
+  - dsa
+  - rsa
+  - ecdsa
+```
+
+### orahost_ssh_key_size
+
+SSH key size of {{ orahost_ssh_key_type }}
+
+#### Default value
+
+```YAML
+orahost_ssh_key_size: 4096
+```
+
+### orahost_ssh_key_type
+
+SSH key type for oracle and grid users' SSH Keys
+
+#### Default value
+
+```YAML
+orahost_ssh_key_type: rsa
 ```
 
 ### role_separation
