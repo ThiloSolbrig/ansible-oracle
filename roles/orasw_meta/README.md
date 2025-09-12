@@ -34,6 +34,7 @@ There are a lot of variables who are used by `orasw_meta`
   - [nfs_server_sw_path](#nfs_server_sw_path)
   - [ocenv_bashrc_init](#ocenv_bashrc_init)
   - [ocenv_bashrc_init_section](#ocenv_bashrc_init_section)
+  - [oracle_all_editions_options_state](#oracle_all_editions_options_state)
   - [oracle_asm_disk_string](#oracle_asm_disk_string)
   - [oracle_base](#oracle_base)
   - [oracle_databases](#oracle_databases)
@@ -61,6 +62,7 @@ There are a lot of variables who are used by `orasw_meta`
   - [oracle_sw_source_www](#oracle_sw_source_www)
   - [orasw_meta_assert_oracle_databases](#orasw_meta_assert_oracle_databases)
   - [orasw_meta_cluster_hostgroup](#orasw_meta_cluster_hostgroup)
+  - [set_oracle_all_editions_options_state](#set_oracle_all_editions_options_state)
   - [shell_aliases](#shell_aliases)
   - [shell_ps1](#shell_ps1)
 - [Discovered Tags](#discovered-tags)
@@ -126,6 +128,7 @@ The dictionary holds data for:
 | Attribute | Description |
 | --- | --- |
 | imagename | Set an optional name for a golden Image to install from. The archiv is read from same directory as the normal installation medias from Oracle. |
+| filesource | `imagename` can be replaced/overridden by `filesource` to provide an absolute path/url to the golden image (when not available in the normal installation place) |
 | edition | allowed values: `SE`, `SE2`, `EE`. default value: <todo> |
 | opatch_minversion | Is needed for patching. Automatically installs a new version of OPatch, when existing version is older then `opatch_minversion` |
 | oracle_home | |
@@ -372,6 +375,18 @@ Define the conntents to add to `.bashr` when `ocenv_bashrc_init: true`.
 ocenv_bashrc_init_section: |
   echo "execute ocenv to source Oracle Environment"
   alias ocenv='. "{{ dbenvdir }}/ocenv"'
+```
+
+### oracle_all_editions_options_state
+
+Intended state of edition independent database options, as defined in {{ oracle_all_editions_options }}
+
+#### Default value
+
+```YAML
+oracle_all_editions_options_state:
+  - {option: dnfs, enabled: false}
+  - {option: uniaud, enabled: false}
 ```
 
 ### oracle_asm_disk_string
@@ -807,9 +822,12 @@ oracle_stage_remote: '{{ oracle_stage }}'
 
 Defines the list of known Patches in `ansible-oracle`.
 
+Patch files are expected to be found by their `filename` under `oracle_sw_source_local`, or `oracle_sw_source_www` respectively,
+unless a `filesource` dict element provides a full path / complete URL to the patch file.
+
 Usage of this variable:
 
-If a complete software repository with pathches is used with a nfs-mount, this variable is not needed.
+If a complete software repository with patches is used with a nfs-mount, this variable is not needed.
 
 #### Default value
 
@@ -822,12 +840,14 @@ oracle_sw_patches: []
 ```YAML
 oracle_sw_patches:
   - filename: p28183653_122010_Linux-x86-64.zip
+    filesource: /mnt/patches/p28183653_122010_Linux-x86-64.zip
     patchid: 28183653
     version: 12.2.0.1
     patchversion: 12.2.0.1.180717
     description: GI-RU-July-2018
     creates: 28183653/28163133/files/suptools/orachk.zip
   - filename: p27468969_122010_Linux-x86-64.zip
+    filesource: https://downloadserver/patches?id=27468969
     patchid: 27468969
     version: 12.2.0.1
     patchversion: 12.2.0.1.180417
@@ -884,6 +904,16 @@ Ansible Inventory hostgroup for RAC-Cluster.
 
 ```YAML
 orasw_meta_cluster_hostgroup: ''
+```
+
+### set_oracle_all_editions_options_state
+
+Switch to globally enable/disable linking of edition independent database options
+
+#### Default value
+
+```YAML
+set_oracle_all_editions_options_state: true
 ```
 
 ### shell_aliases

@@ -71,10 +71,12 @@
     state: directory
   with_items:
     - "{{ db_homes_installed }}"
+  loop_control:
+    loop_var: dbh
   when:
-    - _orasw_meta_primary_node | bool
+    - _orasw_meta_primary_node | bool or _oraswdb_install_home_type=='SI'
     - db_homes_installed is defined
-    - item.state | lower == 'present'
+    - dbh.state | lower == 'present'
   tags:
     - directoriesdb
 
@@ -86,9 +88,11 @@
     group: "{{ oracle_group }}"
     state: directory
   with_items: "{{ db_homes_installed }}"
+  loop_control:
+    loop_var: dbh
   when:
-    - db_homes_config[item.home] is defined
-    - item.state|lower == 'present'
+    - db_homes_config[dbh.home] is defined
+    - dbh.state|lower == 'present'
   tags:
     - directoriesdb
 
@@ -107,7 +111,7 @@
 
 - name: install_home_db | Transfer oracle installfiles to server (local)
   ansible.builtin.copy:
-    src: "{{ oracle_sw_source_local }}/{{ _local_oracle_sw_image_db }}"
+    src: "{{ _local_oracle_sw_absolute_image_db | default(oracle_sw_source_local + '/' + _local_oracle_sw_image_db, true) }}"
     dest: "{{ oracle_stage }}"
     mode: 0664
     force: false
@@ -121,7 +125,7 @@
       home: "{{ dbh.home }}"
       imgname: "{{ _local_oracle_sw_image_db | default('') }}"
   when:
-    - _orasw_meta_primary_node | bool
+    - _orasw_meta_primary_node | bool or _oraswdb_install_home_type=='SI'
     - dbh.state == 'present'
     - is_sw_source_local
     - oracle_sw_copy
@@ -131,10 +135,12 @@
 
 - name: install_home_db | Transfer oracle installfiles to server (www)
   ansible.builtin.get_url:
-    url: "{{ oracle_sw_source_www }}/{{ _local_oracle_sw_image_db }}"
+    url: "{{ _local_oracle_sw_absolute_image_db | default(oracle_sw_source_www + '/' + _local_oracle_sw_image_db, true) }}"
     dest: "{{ oracle_stage }}"
     mode: 0644
     force: false
+    client_cert: "{{ get_url_ssl_client_cert | default(omit) }}"
+    client_key: "{{ get_url_ssl_client_key | default(omit) }}"
   with_items:
     - "{{ db_homes_installed }}"
   become: true
@@ -145,6 +151,7 @@
       home: "{{ dbh.home }}"
       imgname: "{{ _local_oracle_sw_image_db | default('') }}"
   when:
+    - _orasw_meta_primary_node | bool or _oraswdb_install_home_type=='SI'
     - dbh.state == 'present'
     - not is_sw_source_local
     - oracle_sw_copy

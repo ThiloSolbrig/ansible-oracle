@@ -138,6 +138,20 @@ oracle_hostname: "{{ ansible_fqdn }}"
 # @end
 oracle_sw_source_www: http://www/orasw     # address to all software if using the get_url module when putting software on the host(s)
 
+# @var get_url_ssl_client_cert:description: >
+# PEM formatted certificate chain file to be used for SSL client authentication with ansible.builtin.get_url
+# @end
+# @var get_url_ssl_client_cert:type: path
+# @var get_url_ssl_client_cert:default: undefined
+# @var get_url_ssl_client_cert:example: /etc/pki/ca-trust/source/anchors/client-certchain.pem
+
+# @var get_url_ssl_client_key:description: >
+# PEM formatted file that contains your private key to be used for SSL client authentication with ansible.builtin.get_url
+# @end
+# @var get_url_ssl_client_key:type: path
+# @var get_url_ssl_client_key:default: undefined
+# @var get_url_ssl_client_key:example: /etc/pki/tls/private/client-cert.pem
+
 # @var oracle_sw_source_local:description: >
 # Define the directory when `` is set.
 #
@@ -256,6 +270,7 @@ dbenvdir: "{{ oracle_user_home }}/dbenv"
 # | Attribute | Description |
 # | --- | --- |
 # | imagename | Set an optional name for a golden Image to install from. The archiv is read from same directory as the normal installation medias from Oracle. |
+# | filesource | `imagename` can be replaced/overridden by `filesource` to provide an absolute path/url to the golden image (when not available in the normal installation place) |
 # | edition | allowed values: `SE`, `SE2`, `EE`. default value: <todo> |
 # | opatch_minversion | Is needed for patching. Automatically installs a new version of OPatch, when existing version is older then `opatch_minversion` |
 # | oracle_home | |
@@ -292,19 +307,24 @@ dbenvdir: "{{ oracle_user_home }}/dbenv"
 # @var oracle_sw_patches:description: >
 # Defines the list of known Patches in `ansible-oracle`.
 #
+# Patch files are expected to be found by their `filename` under `oracle_sw_source_local`, or `oracle_sw_source_www` respectively,
+# unless a `filesource` dict element provides a full path / complete URL to the patch file.
+#
 # Usage of this variable:
 #
-# If a complete software repository with pathches is used with a nfs-mount, this variable is not needed.
+# If a complete software repository with patches is used with a nfs-mount, this variable is not needed.
 # @end
 # @var oracle_sw_patches:example: >
 # oracle_sw_patches:
 #   - filename: p28183653_122010_Linux-x86-64.zip
+#     filesource: /mnt/patches/p28183653_122010_Linux-x86-64.zip
 #     patchid: 28183653
 #     version: 12.2.0.1
 #     patchversion: 12.2.0.1.180717
 #     description: GI-RU-July-2018
 #     creates: 28183653/28163133/files/suptools/orachk.zip
 #   - filename: p27468969_122010_Linux-x86-64.zip
+#     filesource: https://downloadserver/patches?id=27468969
 #     patchid: 27468969
 #     version: 12.2.0.1
 #     patchversion: 12.2.0.1.180417
@@ -409,6 +429,18 @@ oracle_ee_options_213:
   - {option: olap, state: false}
   - {option: partitioning, state: false}
   - {option: rat, state: false}
+
+# @var oracle_all_editions_options_state:description: >
+# Intended state of edition independent database options, as defined in {{ oracle_all_editions_options }}
+# @end
+oracle_all_editions_options_state:
+  - {option: dnfs, enabled: false}
+  - {option: uniaud, enabled: false}
+
+# @var set_oracle_all_editions_options_state:description: >
+# Switch to globally enable/disable linking of edition independent database options
+# @end
+set_oracle_all_editions_options_state: true
 
 # @todo information: variable description is missing
 # @var oracle_databases:description: >
