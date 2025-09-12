@@ -29,6 +29,8 @@ Meta role used by other roles to share variable defaults.
   - [orahost_meta_cv_assume_distid](#orahost_meta_cv_assume_distid)
   - [orahost_meta_java_options](#orahost_meta_java_options)
   - [orahost_meta_tmpdir](#orahost_meta_tmpdir)
+  - [orahost_min_swap_mb](#orahost_min_swap_mb)
+  - [orasw_meta_primary_node](#orasw_meta_primary_node)
   - [role_separation](#role_separation)
   - [scripts_folder](#scripts_folder)
   - [sysctl_kernel_sem_force](#sysctl_kernel_sem_force)
@@ -61,30 +63,44 @@ asm_diskgroups: []
 asm_diskgroups:
  - diskgroup: crs
    properties:
-     - {redundancy: normal, ausize: 4}
+     - {redundancy: normal}
    attributes:
-     - {name: 'compatible.rdbms', value: 11.2.0.4.0}
-     - {name: 'compatible.asm', value: 12.1.0.2.0}
+     - {name: compatible.asm, value: 12.1.0.2.0}
+     - {name: compatible.rdbms, value: 11.2.0.4.0}
+     - {name: au_size, value: 4m}
    disk:
-     - {device: /dev/sdc, asmlabel: crs01}
-     - {device: /dev/sdd, asmlabel: crs02}
-     - {device: /dev/sde, asmlabel: crs03}
+     - {device: /dev/sdc, asmlabel: crs01, failure_group: storage01}
+     - {device: /dev/sdd, asmlabel: crs02, failure_group: storage02}
+     - {device: /dev/sde, asmlabel: crs03, failure_group: nfs, quorum: true}
  - diskgroup: data
    properties:
-     - {redundancy: external, ausize: 4}
+     - {redundancy: external}
    attributes:
-     - {name: compatible.rdbms, value: 11.2.0.4.0}
      - {name: compatible.asm, value: 12.1.0.2.0}
+     - {name: compatible.rdbms, value: 11.2.0.4.0}
+     - {name: au_size, value: 4m}
    disk:
      - {device: /dev/sdf, asmlabel: data01}
  - diskgroup: fra
    properties:
-    - {redundancy: external, ausize: 4}
-  attributes:
-     - {name: compatible.rdbms, value: 11.2.0.4.0}
+    - {redundancy: external}
+   attributes:
      - {name: compatible.asm, value: 12.1.0.2.0}
+     - {name: compatible.rdbms, value: 11.2.0.4.0}
+     - {name: au_size, value: 4m}
    disk:
      - {device: /dev/sdg, asmlabel: fra01}
+
+# Defining ausize in `properties` is still supported for backward compatibility.
+# But, except for initial ASM diskgroup, it still won't be considered when creating the diskgroup, though.
+asm_diskgroups:
+ - diskgroup: crs
+   properties:
+     - {redundancy: normal, ausize: 4}
+   attributes:
+     - {name: compatible.asm, value: 12.1.0.2.0}
+     - {name: compatible.rdbms, value: 11.2.0.4.0}
+   ...
 ```
 
 ### asmadmin_group
@@ -371,6 +387,43 @@ orahost_meta_java_options: >-
 orahost_meta_tmpdir: '{{ oracle_tmp_stage }}'
 ```
 
+### orahost_min_swap_mb
+
+Minimum amount of swap space (in MB) required for DB server.
+Note: We observed ansible_memory_mb.swap.total is 1MB less than configured
+swap (e.g. 16383 instead of 16384 for 16GB)
+
+**_Type:_** integer<br />
+
+#### Default value
+
+```YAML
+orahost_min_swap_mb: 16383
+```
+
+### orasw_meta_primary_node
+
+The state of orasw_meta_primary_node is:
+Single-Instance / Oracle Restart: true
+Cluster 1st node: true
+Cluster other nodes: false
+
+**_Type:_** boolean<br />
+
+#### Default value
+
+```YAML
+orasw_meta_primary_node: >
+  {%- if oracle_install_option_gi | default('') | upper != 'CRS_CONFIG' -%}
+    {%- set _orasw_meta_primary_node = true -%}
+  {%- elif groups[orasw_meta_cluster_hostgroup][0] == inventory_hostname -%}
+    {%- set _orasw_meta_primary_node = true -%}
+  {%- else -%}
+    {%- set _orasw_meta_primary_node = false -%}
+  {%- endif -%}
+  {{ _orasw_meta_primary_node }}
+```
+
 ### role_separation
 
 Should role separation be used for Oracle Restart/Grid-Infrastructure.
@@ -410,7 +463,6 @@ sysctl_kernel_sem_force: false
 **_assert_ansible_oracle_**
 
 **_molecule-notest_**
-
 
 ## Dependencies
 

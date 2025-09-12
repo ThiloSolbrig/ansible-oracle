@@ -11,11 +11,14 @@ skip_list:
 
 exclude_paths:
   - .github
+  - Taskfile.yml
   - .ansible
+  - .ansibledoctor.yml
   - example
   - extensions
   - dbhome-conversion
   - docker
+  - tools
   - plugins/modules
   - execution-environment.yml
   - playbooks/desupported
@@ -24,6 +27,8 @@ exclude_paths:
   - example/*/ansible/playbooks/collections/ansible_collections
   - example/*/ansible/requirements.yml
   - playbooks/collections/ansible_collections
+  - playbooks/dev-sec.yml
+  - playbooks/dev_sec.yml
 
 extra_vars:
   hostgroup: all

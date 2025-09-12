@@ -4,7 +4,7 @@
   # => unzip was executed on 1st node only.
   # => hopefully the setup is the same on all nodes...
   when:
-    - _orasw_meta_primary_node | bool
+    - orasw_meta_primary_node | bool
   tags: runcluvfy
   block:
 
@@ -42,7 +42,7 @@
       environment: "{{ oracle_script_env }}"
       when:
         - _oraswgi_meta_configure_cluster
-        - _orasw_meta_primary_node | bool
+        - orasw_meta_primary_node | bool
         - not gi_ignoreprereq | bool
 
     - name: runcluvfy | Execute cluvfy for Oracle Restart
@@ -52,8 +52,8 @@
       vars:
         cluvfy_args: >-
           stage -pre hacfg
-          -osdba {{ dba_group }}
-          -osoper {{ oper_group }}
+          -osdba {{ asmdba_group }}
+          -osoper {{ asmoper_group }}
           -orainv oinstall
       register: cmdruncluvfy
       become: true
@@ -61,6 +61,7 @@
       environment: "{{ oracle_script_env }}"
       when:
         - not _oraswgi_meta_configure_cluster
+        - not gi_ignoreprereq | bool
 
     - ansible.builtin.debug:  # noqa name[missing]
         var: cmdruncluvfy.stdout_lines

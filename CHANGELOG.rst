@@ -4,6 +4,77 @@ opitzconsulting.ansible\_oracle Release Notes
 
 .. contents:: Topics
 
+v4.14.0
+=======
+
+Major Changes
+-------------
+
+- support for linking of edition independent options, like DirectNFS and Unified Auditing (oravirt#^551)
+
+Minor Changes
+-------------
+
+- introduced new variables get_url_ssl_client_cert and get_url_ssl_client_key to submit client certs in get_url module  (oravirt#554)
+- oraasm_manage_diskgroups: Support for empty `device_persistence` added to `_oraasm_manage_diskgroups_asmdevice_list`, e.g. if Oracle files are on NFS (oravirt#555)
+- oradb_manage_db: add support for Oracle 26ai (oravirt#568)
+- orahost: added compat-openssl11 and fontconfig rpms for 26ai on RHEL/OL (oravirt#568)
+- orahost_storage: Added support for unpartitioned dm-devices and partitions to setup-udev.sh.j2. Both don't have scsi ids. (oravirt#555)
+- orasw_meta: add support for Oracle 26ai (oravirt#568)
+- oraswdb_install: add support for Oracle 26ai (oravirt#568)
+- oraswdb_install: make minimum required swap space a variable (and consider rounding) (oravirt#536)
+- oraswgi_install: Added support for empty `device_persistence` to grid-install templates (oravirt#555)
+- oraswgi_meta: Assert extended by `device_persistence: udev` and empty `device_persistence` (oravirt#555)
+
+Bugfixes
+--------
+
+- ASM disk's au_size setting not considered, except for initial diskgroup (oravirt#538)
+- One-off-patching of clusterware fails because roothas_prepatch is used (oravirt#546)
+- oracle_asmdg.py: compare sorted current_properties to sorted wanted_attributes, because we shouldn't rely on the list order of asm_diskgroups' attributes list is the same as querying v$asm_attribute returns (oravirt#534)
+- oracle_asmdg.py: exclude read_only attributes when building current_properties from v$asm_attribute as they're also removed from wanted_attributes (oravirt#534)
+- oracle_asmdg.py: wanted_attributes casted to list to reflect change in zip object type (oravirt#534)
+- oracle_tablespace.py: Bugfix for Oracle 26ai (oravirt#567)
+- orahost_storage: Ensure `oracle_asm_disk_string` directory exists in udev.yml (oravirt#555)
+- orahost_storage: Get scsi id of unpartitioned devices from device itself instead of parent device in setup-udev.sh.j2 (oravirt#555)
+- orasw_meta, oraswdb_install: Fix setup of SI database homes on cluster (oravirt#558)
+- oraswgi_install: With udev device persistence, grid-install templates shouldn't build asm diskgroups from the devices but from their device mapper aliases instead (which reflect oracle_asm_disk_string) (oravirt#555)
+- oraswgi_install: cvuqdisk was installed from oracle_home_gi, where it wasn't available on non-first nodes; changed file source to oracle_rsp_stage (oravirt#552)
+- os.yml: We only restart autofs.service if it actually exists and is unmasked (oravirt#563)
+- plugins/modules/oracle_datapatch.py: Removed cx_oracle requirement and check. It's actually not used there (oravirt#545)
+- wrong block operator caused newline to be appended to __orahost_kernel_semopm and __orahost_kernel_semmni (oravirt#541)
+
+v4.13.2
+=======
+
+Bugfixes
+--------
+
+- oradb_manage_db: check if .bashrc exists before trying to disable ocenv
+- oraswgi_install: ansible.builtin.yum fails installing cvuqdisk on FIPS-enabled hosts due to missing package digest
+- oraswgi_manage_patches: roothas_prepatch.yml and roothas_postpatch.yml check wrong directory to determine if GI is locked/unlocked (oravirt#530)
+
+v4.13.1
+=======
+
+Minor Changes
+-------------
+
+- Upgrade ansible-doctor 6.0.5 and pre-commit (oravirt#517)
+- ansible-lint upgrade to 25.2.1 (oravirt#517)
+- helper script for building releases (oravirt#518)
+- nix: Adding direnv and nix configuration for easy setup of dev environment via nix-shell (oravirt#517)
+
+Security Fixes
+--------------
+
+- ansible-core: Upgrade versions due to security alerts from dependbot (oravirt#517)
+
+Bugfixes
+--------
+
+- oradb_tzupgrade_pdbs: compose the list of PDBs in Ansible (oravirt#516)
+
 v4.13.0
 =======
 

@@ -28,6 +28,7 @@ Role to configure the hostsystem for ansible-oracle
   - [disable_selinux](#disable_selinux)
   - [etc_hosts_entries](#etc_hosts_entries)
   - [etc_hosts_ip](#etc_hosts_ip)
+  - [extra_hugepages_per_instance](#extra_hugepages_per_instance)
   - [extrarepos_disabled](#extrarepos_disabled)
   - [extrarepos_enabled](#extrarepos_enabled)
   - [firewall_service](#firewall_service)
@@ -51,6 +52,9 @@ Role to configure the hostsystem for ansible-oracle
   - [oracle_sysctl](#oracle_sysctl)
   - [oracle_sysctl_file](#oracle_sysctl_file)
   - [oracle_users](#oracle_users)
+  - [orahost_ssh_hostkeytypes](#orahost_ssh_hostkeytypes)
+  - [orahost_ssh_key_size](#orahost_ssh_key_size)
+  - [orahost_ssh_key_type](#orahost_ssh_key_type)
   - [os_family_supported](#os_family_supported)
   - [os_min_supported_version](#os_min_supported_version)
   - [percent_hugepages](#percent_hugepages)
@@ -323,6 +327,20 @@ Set IP to 2nd Interface on virtualbox and 1st for all otehr installations
 ```YAML
 etc_hosts_ip: "{% if 'virtualbox' in ansible_virtualization_type %}{{ ansible_all_ipv4_addresses[1]
   }}{% else %}{{ ansible_default_ipv4.address }}{% endif %}"
+```
+
+### extra_hugepages_per_instance
+
+According to MOS KB151310's hugepages_settings.sh we've to add 1 page per shm segment.
+Empirically, instances allocate 4 segments each on Linux.
+This overhead is considered when computing `nr_hugepages_memory`
+
+**_Type:_** integer<br />
+
+#### Default value
+
+```YAML
+extra_hugepages_per_instance: 4
 ```
 
 ### extrarepos_disabled
@@ -614,6 +632,8 @@ oracle_packages:
   - elfutils-libelf-devel
   - cpp
   - lsof
+  - compat-openssl11
+  - fontconfig
 ```
 
 ### oracle_packages_sles_multi
@@ -745,6 +765,40 @@ oracle_users:
     primgroup: '{{ oracle_group }}'
     othergroups: '{{ dba_group }},{{ asmadmin_group }},{{ asmdba_group }},{{ asmoper_group
       }},backupdba,dgdba,kmdba,{{ oper_group }}'
+```
+
+### orahost_ssh_hostkeytypes
+
+SSH host key types to collect/deploy among hosts
+Please note, ed25519 are not supported on FIPS enabled systems and though better not collected
+
+#### Default value
+
+```YAML
+orahost_ssh_hostkeytypes:
+  - dsa
+  - rsa
+  - ecdsa
+```
+
+### orahost_ssh_key_size
+
+SSH key size of {{ orahost_ssh_key_type }}
+
+#### Default value
+
+```YAML
+orahost_ssh_key_size: 4096
+```
+
+### orahost_ssh_key_type
+
+SSH key type for oracle and grid users' SSH Keys
+
+#### Default value
+
+```YAML
+orahost_ssh_key_type: rsa
 ```
 
 ### os_family_supported
