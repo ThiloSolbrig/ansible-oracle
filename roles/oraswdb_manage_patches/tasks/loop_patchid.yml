@@ -82,6 +82,8 @@
     output: verbose
     state: "{{ dhc_opatch.state }}"
     script_env:
+      TMPDIR: "{{ orahost_meta_tmpdir }}"
+      _JAVA_OPTIONS: "{{ orahost_meta_java_options }}"
       LANG: "{{ orasw_meta_forced_lang }}"
   become: true
   become_user: "{{ __opatchauto_patchtype | ternary('root', oracle_user) }}"
