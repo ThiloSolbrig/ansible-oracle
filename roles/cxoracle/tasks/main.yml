@@ -8,11 +8,15 @@
       ansible.builtin.set_fact:
         _cx_oracle_source: "{{ cx_oracle3_source | default(cx_oracle_source) | default('cx_oracle') }}"
 
+    - name: cx_oracle | Get cx_oracle image filename
+      ansible.builtin.set_fact:
+        _cx_oracle_filename: "{{ _cx_oracle_source | basename }}"
+
     # Accept only if src is a file-URL or path
     - name: cx_oracle | Transfer cx_oracle to server (local)
       ansible.builtin.copy:
         src: "{{ _cx_oracle_source | regex_replace('^file://', '') }}"
-        dest: "{{ oracle_stage }}"
+        dest: "{{ oracle_stage }}/{{ _cx_oracle_filename }}"
         mode: 0644
       when:
         - is_sw_source_local
@@ -23,7 +27,7 @@
     - name: cx_oracle | Transfer cx_oracle to server (www)
       ansible.builtin.get_url:
         url: "{{ _cx_oracle_source }}"
-        dest: "{{ oracle_stage }}"
+        dest: "{{ oracle_stage }}/{{ _cx_oracle_filename }}"
         mode: 0644
         force: false
         client_cert: "{{ get_url_ssl_client_cert | default(omit) }}"
@@ -38,7 +42,7 @@
     # => Install cx_Oracle for Python3 only
     - name: cx_oracle | Install cx_oracle for Python3
       ansible.builtin.pip:
-        name: "{{ oracle_stage }}/{{ _cx_oracle_source | basename }}"
+        name: "{{ oracle_stage }}/{{ _cx_oracle_filename }}"
         executable: pip3
         extra_args: "{{ extra_args }}"
         umask: "{{ cx_oracle_umask | default(omit) }}"
@@ -47,5 +51,5 @@
   always:
     - name: "Cleanup cx_oracle from {{ oracle_stage }}"
       ansible.builtin.file:
-        path: "{{ oracle_stage }}/{{ _cx_oracle_source | basename }}"
+        path: "{{ oracle_stage }}/{{ _cx_oracle_filename }}"
         state: absent
