@@ -16,6 +16,7 @@
     state: "{{ item.state }}"
     script_env:
       LANG: "{{ orasw_meta_forced_lang }}"
+    apply_options: "{{ item.apply_options | default(omit) }}"
   notify: rootscript_postpatch
   vars:
     __opatchauto_patchtype: false  # opatch apply
