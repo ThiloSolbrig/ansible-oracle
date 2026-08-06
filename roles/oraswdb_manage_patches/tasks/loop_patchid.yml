@@ -83,6 +83,7 @@
     state: "{{ dhc_opatch.state }}"
     script_env:
       LANG: "{{ orasw_meta_forced_lang }}"
+    apply_options: "{{ dhc_opatch.apply_options | default(omit) }}"
   become: true
   become_user: "{{ __opatchauto_patchtype | ternary('root', oracle_user) }}"
   register: _oracle_opatch_res
