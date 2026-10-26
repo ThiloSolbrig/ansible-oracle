@@ -27,7 +27,7 @@ _oraswdb_install_opatchauto_dirlist: |-
 _oraswdb_install_patches_dirlist: |-
   {% for __patch_dict in db_homes_config[dbh.home]['opatch'] | default({}) | selectattr('state', 'match', 'present') -%}
   {{- _oraswdb_install_patch_dir_prefix }}/{{ __patch_dict.path
-  | default((__patch_dict.patchid | string)+ '/' + (__patch_dict.patchid | string)) -}}
+  | default((__patch_dict.unique_patchid | default(__patch_dict.patchid) | string)+ '/' + (__patch_dict.patchid | string)) -}}
   {%- if not loop.last %},{% endif -%}
   {%- endfor %}
 
@@ -77,16 +77,10 @@ _local_oracle_sw_absolute_image_db: >-
         | selectattr('version', 'equalto', db_homes_config[dbh.home]['version'])
         | list)[0]['filesource']
       ) }}
+# ORACLE_HOME without database (e.g. dedicated listener home or before a home switch) => SI
 _oraswdb_install_home_type: >-
-  {{ ((oracle_databases | default([]))
+  {{ (oracle_databases | default([]))
       | selectattr('home','equalto',dbh.home)
       | selectattr('state','equalto','present')
       | map(attribute='oracle_db_type',default='SI')
-      | unique)[0] }}
-
-_local_oracle_sw_absolute_image_db: >-
-  {{ db_homes_config[dbh.home].filesource
-      | default((_oraswdb_install_oracle_sw_image_db
-        | selectattr('version', 'equalto', db_homes_config[dbh.home]['version'])
-        | list)[0]['filesource']
-      ) }}
+      | unique | first | default('SI') }}
