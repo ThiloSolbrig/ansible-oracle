@@ -2,7 +2,7 @@
 
 Create, modify and remove Oracle Databases
 
-## Table of content
+## Table of contents
 
 - [Requirements](#requirements)
 - [Default Variables](#default-variables)
@@ -77,6 +77,8 @@ oracle_gi_cluster_type: STANDARD
 **_dbca_**
 
 **_dbcatemplate_**
+
+**_dotprofile_db_**
 
 **_listener_**
 

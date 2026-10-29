@@ -2,7 +2,7 @@
 
 sets up the host generic stuff
 
-## Table of content
+## Table of contents
 
 - [Requirements](#requirements)
 - [Default Variables](#default-variables)
@@ -92,7 +92,6 @@ common_packages_el10:
   - bind-utils
   - ethtool
   - expect
-  - facter
   - git
   - grubby
   - initscripts
@@ -101,7 +100,6 @@ common_packages_el10:
   - libstdc++-devel
   - lsof
   - lvm2
-  - mlocate
   - module-init-tools
   - nc
   - net-tools
@@ -118,8 +116,6 @@ common_packages_el10:
   - unzip
   - util-linux-ng
   - xfsprogs
-  - xorg-x11-utils
-  - xorg-x11-xauth
 ```
 
 ### common_packages_el6
@@ -161,9 +157,7 @@ common_packages_el6:
   - twm
   - autofs
   - parted
-  - mlocate
   - ksh
-  - psmisc
 ```
 
 ### common_packages_el7
@@ -409,8 +403,7 @@ Url for epel-release-latest-7.noarch.rpm
 #### Default value
 
 ```YAML
-epel7_rpm: 
-  https://archives.fedoraproject.org/pub/archive/epel/7/x86_64/Packages/e/epel-release-7-14.noarch.rpm
+epel7_rpm: https://archives.fedoraproject.org/pub/archive/epel/7/x86_64/Packages/e/epel-release-7-14.noarch.rpm
 ```
 
 ### epel8_rpm

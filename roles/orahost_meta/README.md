@@ -2,7 +2,7 @@
 
 Meta role used by other roles to share variable defaults.
 
-## Table of content
+## Table of contents
 
 - [Requirements](#requirements)
 - [Default Variables](#default-variables)
@@ -285,10 +285,8 @@ oracle_seclimits:
   - {name: hard nofile, value: 65536}
   - {name: soft stack, value: 10240}
   - {name: hard stack, value: 32768}
-  - {name: soft memlock, value: '{{ ((0.91 * ansible_memtotal_mb) * 1024) | round
-      | int }}'}
-  - {name: hard memlock, value: '{{ ((0.91 * ansible_memtotal_mb) * 1024) | round
-      | int }}'}
+  - {name: soft memlock, value: '{{ ((0.91 * ansible_memtotal_mb) * 1024) | round | int }}'}
+  - {name: hard memlock, value: '{{ ((0.91 * ansible_memtotal_mb) * 1024) | round | int }}'}
 ```
 
 ### oracle_stage
@@ -387,7 +385,8 @@ orahost_meta_java_options: >-
 #### Default value
 
 ```YAML
-orahost_meta_tmpdir: '{{ oracle_tmp_stage }}'
+orahost_meta_tmpdir: >-
+  {% if ansible_fips | default(false) %}{{ oracle_stage }}{%- endif %}/tmp
 ```
 
 ### orahost_min_swap_mb
@@ -438,6 +437,7 @@ SSH key type for oracle and grid users' SSH Keys
 orahost_ssh_key_type: rsa
 ```
 
+<<<<<<< HEAD
 ### orasw_meta_primary_node
 
 The state of orasw_meta_primary_node is:
@@ -461,6 +461,8 @@ orasw_meta_primary_node: >
   {{ _orasw_meta_primary_node }}
 ```
 
+=======
+>>>>>>> master
 ### role_separation
 
 Should role separation be used for Oracle Restart/Grid-Infrastructure.
